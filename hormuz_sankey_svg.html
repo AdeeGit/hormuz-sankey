@@ -1,243 +1,227 @@
 
-<div style="padding:12px 4px 4px">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#f0f2f5;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px;font-family:system-ui,sans-serif}
+  #card{width:900px;max-width:100%;background:#ffffff;border-radius:16px;box-shadow:0 2px 24px rgba(0,0,0,0.10);padding:24px 28px 20px;border:1px solid #e2e4e9}
+  #card-title{font-size:15px;font-weight:600;color:#111;margin-bottom:4px}
+  #card-sub{font-size:12px;color:#888;margin-bottom:14px;min-height:16px}
+  .btn-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .btn{font-size:12px;font-weight:500;padding:7px 16px;border-radius:20px;border:1.5px solid #ccc;background:#f5f5f5;color:#555;cursor:pointer;transition:all .18s;white-space:nowrap}
+  .btn:hover{border-color:#aaa;background:#ebebeb}
+  .btn.on{color:#fff;border-color:transparent}
+  .leg{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+  .li{font-size:11px;color:#777;display:flex;align-items:center;gap:5px}
+  .ls{display:inline-block;width:22px;height:5px;border-radius:3px}
+  #svgwrap{width:100%;line-height:0}
+  #svgwrap svg{display:block;width:100%;height:auto}
+  #hoverbar{min-height:22px;margin-top:8px;font-size:11px;color:#666;padding:5px 10px;background:#f7f8fa;border-radius:6px;border:1px solid #e8e9ec;display:none}
+  #hoverbar.vis{display:block}
+  #src{font-size:10px;color:#bbb;margin-top:10px;text-align:right}
+</style>
 
-<div style="margin-bottom:10px">
-  <span style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-right:8px">Scenario:</span>
-  <button id="b0" onclick="show(0)" style="font-size:12px;padding:5px 14px;border-radius:20px;border:2px solid #0F6E56;background:#0F6E56;color:#fff;cursor:pointer;margin-right:6px">① Normal 2025</button>
-  <button id="b1" onclick="show(1)" style="font-size:12px;padding:5px 14px;border-radius:20px;border:2px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary);cursor:pointer;margin-right:6px">② Hormuz blocked</button>
-  <button id="b2" onclick="show(2)" style="font-size:12px;padding:5px 14px;border-radius:20px;border:2px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary);cursor:pointer">③ Both blocked</button>
-</div>
+<div id="card">
+  <div id="card-title">Global oil flow: Hormuz &amp; Bab el-Mandeb chokepoints</div>
+  <div id="card-sub"></div>
 
-<div id="status" style="font-size:12px;font-weight:500;color:#0F6E56;margin-bottom:8px;min-height:18px"></div>
+  <div class="btn-row">
+    <button class="btn" id="b0" onclick="show(0)">① Normal 2025</button>
+    <button class="btn" id="b1" onclick="show(1)">② Hormuz blocked</button>
+    <button class="btn" id="b2" onclick="show(2)">③ Both blocked</button>
+  </div>
 
-<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px">
-  <span style="font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:#1D9E75"></span>Crude oil</span>
-  <span style="font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:#378ADD"></span>LNG</span>
-  <span style="font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:#E09020"></span>Pipeline bypass</span>
-  <span style="font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:#7F77DD"></span>Cape of Good Hope</span>
-  <span style="font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:20px;height:5px;border-radius:2px;background:#E24B4A"></span>Blocked</span>
-</div>
+  <div class="leg">
+    <span class="li"><span class="ls" style="background:#1D9E75"></span>Crude oil</span>
+    <span class="li"><span class="ls" style="background:#378ADD"></span>LNG</span>
+    <span class="li"><span class="ls" style="background:#E09020"></span>Pipeline bypass</span>
+    <span class="li"><span class="ls" style="background:#7F77DD"></span>Cape of Good Hope</span>
+    <span class="li"><span class="ls" style="background:#E24B4A"></span>Blocked</span>
+  </div>
 
-<div id="svgwrap"></div>
-
-<div id="tip" style="display:none;margin-top:8px;padding:7px 12px;background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;font-size:12px;color:var(--color-text-primary)"></div>
-
+  <div id="svgwrap"></div>
+  <div id="hoverbar"></div>
+  <div id="src">Sources: EIA · IEA · Reuters · Data approx. · Built with Claude</div>
 </div>
 
 <script>
-const FC = { oil:"#1D9E75", lng:"#378ADD", bypass:"#E09020", cape:"#7F77DD", block:"#E24B4A" };
-const BTN_COLORS = ["#0F6E56","#BA7517","#A32D2D"];
-const STATUS = [
-  "Both straits open · 2025 baseline · ~20 mb/d through Hormuz · Brent ~$72/bbl",
-  "Hormuz ~70% blocked · Mar 2026 · Pipelines reroute via Bab el-Mandeb · Brent ~$106/bbl",
-  "DOUBLE CHOKEPOINT · Hormuz + Bab el-Mandeb both blocked · Cape of Good Hope only route · Brent est. $150–175/bbl"
+const FC={oil:"#1D9E75",lng:"#378ADD",bypass:"#E09020",cape:"#7F77DD",block:"#E24B4A"};
+const BC=["#0F6E56","#BA7517","#A32D2D"];
+const SUBS=[
+  "Both straits open · 2025 baseline · ~20 mb/d through Hormuz · Brent ~$72 /bbl",
+  "Hormuz ~70% blocked · Mar 2026 · Pipelines divert via Bab el-Mandeb · Brent ~$106 /bbl",
+  "Double chokepoint · Hormuz + Bab el-Mandeb blocked · Cape of Good Hope only route · Brent est. $150–175 /bbl"
 ];
 
-const MODES = [
+const M=[
   {
-    hasC3: false,
-    c1label:["Strait of","Hormuz"], c1fill:"#0F6E56", c1blocked:false,
-    c2label:["Bab el-Mandeb","/ Red Sea"],  c2fill:"#0C447C", c2blocked:false,
-    producers:["Saudi Arabia","Iraq","UAE","Kuwait","Qatar","Iran"],
-    dests:["China","India","Japan / S.Korea","Europe","USA","Other Asia"],
+    hasC3:false,
+    c1l:["Strait of","Hormuz"],      c1f:"#0F6E56",c1b:false,
+    c2l:["Bab el-Mandeb","/ Red Sea"],c2f:"#0C447C",c2b:false,
+    prod:["Saudi Arabia","Iraq","UAE","Kuwait","Qatar","Iran"],
+    dest:["China","India","Japan/S.Korea","Europe","USA","Other Asia"],
     p2h:[[0,5.5,"oil"],[1,3.4,"oil"],[2,2.6,"oil"],[3,1.7,"oil"],[4,0.9,"oil"],[4,1.2,"lng"],[5,1.5,"oil"]],
     h2b:[[4.5,"oil","Hormuz → Bab (crude)"],[1.2,"lng","Hormuz → Bab (LNG)"]],
     h2d:[[0,6.0,"oil","Hormuz → China"],[1,2.5,"oil","Hormuz → India"],[2,1.0,"oil","Hormuz → Japan/S.Korea"]],
     b2d:[[2,1.2,"oil","Bab → Japan/S.Korea"],[3,2.8,"oil","Bab → Europe (oil)"],[3,1.2,"lng","Bab → Europe (LNG)"],[4,0.5,"oil","Bab → USA"]],
-    bypass2b:[],bypass2c:[],c2d:[],iraq:[]
+    byb:[],byc:[],c2d:[],iraq:[]
   },
   {
-    hasC3: false,
-    c1label:["Hormuz","(~70% blocked)"], c1fill:"#791F1F", c1blocked:true,
-    c2label:["Bab el-Mandeb","(critical lifeline)"], c2fill:"#085041", c2blocked:false,
-    producers:["Saudi Arabia","Iraq","UAE","Kuwait","Qatar","Iran"],
-    dests:["China","India","Japan / S.Korea","Europe","USA","Other Asia"],
+    hasC3:false,
+    c1l:["Hormuz","(~70% blocked)"], c1f:"#791F1F",c1b:true,
+    c2l:["Bab el-Mandeb","(critical lifeline)"],c2f:"#085041",c2b:false,
+    prod:["Saudi Arabia","Iraq","UAE","Kuwait","Qatar","Iran"],
+    dest:["China","India","Japan/S.Korea","Europe","USA","Other Asia"],
     p2h:[[0,1.2,"oil"],[1,0.5,"oil"],[2,0.4,"oil"],[3,0.2,"oil"],[4,0.1,"lng"],[5,0.0,"block"]],
-    bypass2b:[[3.5,"bypass","Yanbu pipeline (Saudi) → Bab"],[1.5,"bypass","Fujairah pipeline (UAE) → Bab"]],
+    byb:[[3.5,"bypass","Yanbu pipeline (Saudi) → Bab"],[1.5,"bypass","Fujairah pipeline (UAE) → Bab"]],
     h2b:[[1.8,"oil","Hormuz remnant → Bab"]],
     h2d:[[1,0.5,"oil","Hormuz → India (direct)"]],
     b2d:[[0,2.8,"bypass","Bab → China"],[1,1.6,"bypass","Bab → India"],[2,0.9,"oil","Bab → Japan/S.Korea"],[3,1.2,"bypass","Bab → Europe"],[3,0.05,"lng","Bab → Europe (LNG)"],[4,0.2,"oil","Bab → USA"]],
-    bypass2c:[],c2d:[],iraq:[]
+    byc:[],c2d:[],iraq:[]
   },
   {
-    hasC3: true,
-    c1label:["Hormuz","(BLOCKED)"], c1fill:"#791F1F", c1blocked:true,
-    c2label:["Bab el-Mandeb","(BLOCKED)"], c2fill:"#791F1F", c2blocked:true,
-    c3label:["Cape of Good Hope","+12–15 days"], c3fill:"#3C3489",
-    producers:["Saudi Arabia","Iraq","UAE","Kuwait","Qatar","Iran"],
-    dests:["China","India","Japan / S.Korea","Europe","USA","Other Asia"],
+    hasC3:true,
+    c1l:["Hormuz","(BLOCKED)"],      c1f:"#791F1F",c1b:true,
+    c2l:["Bab el-Mandeb","(BLOCKED)"],c2f:"#791F1F",c2b:true,
+    c3l:["Cape of Good Hope","+12–15 days"],c3f:"#3C3489",
+    prod:["Saudi Arabia","Iraq","UAE","Kuwait","Qatar","Iran"],
+    dest:["China","India","Japan/S.Korea","Europe","USA","Other Asia"],
     p2h:[[0,0.3,"oil"],[1,0.2,"oil"],[5,0.0,"block"]],
-    h2b:[],bypass2b:[],
+    h2b:[],byb:[],
     h2d:[[1,0.4,"oil","Hormuz trickle → India"]],
-    bypass2c:[[3.5,"bypass","Yanbu pipeline → Cape route"],[1.5,"bypass","Fujairah pipeline → Cape route"]],
+    byc:[[3.5,"bypass","Yanbu pipeline → Cape route"],[1.5,"bypass","Fujairah pipeline → Cape route"]],
     c2d:[[0,1.4,"cape","Cape → China (+15d)"],[2,0.8,"cape","Cape → Japan/S.Korea"],[3,1.2,"cape","Cape → Europe (+12d)"],[4,0.5,"cape","Cape → USA"],[5,0.6,"cape","Cape → Other Asia"]],
     b2d:[],
     iraq:[[0.8,"bypass","Iraq → Turkey pipeline → Europe"]]
   }
 ];
 
-function rgba(hex,a){
-  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
+function rgba(h,a){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgba(${r},${g},${b},${a})`}
 
 function buildSVG(mi){
-  const M=MODES[mi];
-  const W=680, H=420;
-  const tm=16, bm=12, drawH=H-tm-bm;
-  const nW=16, pgap=7, dgap=7;
+  const D=M[mi];
+  const W=840,H=400,tm=22,bm=8,drawH=H-tm-bm,nW=18,pg=7,dg=7;
 
-  // Column x-centers — spread across full 680
-  const cx = M.hasC3
-    ? [78, 208, 338, 468, W-78]
-    : [78, 232, 398, W-78, 0];
+  const cx=D.hasC3
+    ?[88,220,352,484,W-88]
+    :[88,248,426,W-88,0];
 
   function colNodes(vals,ci,gap){
     const tot=vals.reduce((a,b)=>a+b,0)||1;
-    const avail=drawH-gap*(vals.length-1);
+    const av=drawH-gap*(vals.length-1);
     let y=tm;
-    return vals.map(v=>{
-      const h=Math.max(4,(Math.max(v,0.1)/tot)*avail);
-      const n={x:cx[ci]-nW/2,y,h};
-      y+=h+gap; return n;
-    });
+    return vals.map(v=>{const h=Math.max(5,(Math.max(v,0.12)/tot)*av);const n={x:cx[ci]-nW/2,y,h};y+=h+gap;return n});
   }
 
-  const prodOut=M.producers.map((_,i)=>Math.max((M.p2h||[]).filter(f=>f[0]===i).reduce((s,f)=>s+f[1],0),0.1));
-  const dci=M.hasC3?4:3;
-  const destIn=M.dests.map((_,i)=>{
-    const a=(M.h2d||[]).filter(f=>f[0]===i).reduce((s,f)=>s+f[1],0);
-    const b=(M.b2d||[]).filter(f=>f[0]===i).reduce((s,f)=>s+f[1],0);
-    const c=(M.c2d||[]).filter(f=>f[0]===i).reduce((s,f)=>s+f[1],0);
-    const d=i===3?(M.iraq||[]).reduce((s,f)=>s+f[0],0):0;
-    return Math.max(a+b+c+d,0.1);
+  const prodOut=D.prod.map((_,i)=>Math.max((D.p2h||[]).filter(f=>f[0]===i).reduce((s,f)=>s+f[1],0),0.12));
+  const dci=D.hasC3?4:3;
+  const destIn=D.dest.map((_,i)=>{
+    const a=(D.h2d||[]).filter(f=>f[0]===i).reduce((s,f)=>s+f[1],0);
+    const b=(D.b2d||[]).filter(f=>f[0]===i).reduce((s,f)=>s+f[1],0);
+    const c=(D.c2d||[]).filter(f=>f[0]===i).reduce((s,f)=>s+f[1],0);
+    const d=i===3?(D.iraq||[]).reduce((s,f)=>s+f[0],0):0;
+    return Math.max(a+b+c+d,0.12);
   });
 
-  const pNodes=colNodes(prodOut,0,pgap);
-  const dNodes=colNodes(destIn,dci,dgap);
+  const pN=colNodes(prodOut,0,pg);
+  const dN=colNodes(destIn,dci,dg);
+  const hH=drawH*0.66,bH=drawH*0.60,cH=drawH*0.54;
+  const hN={x:cx[1]-nW/2,y:tm+(drawH-hH)/2,h:hH};
+  const bN={x:cx[2]-nW/2,y:tm+(drawH-bH)/2,h:bH};
+  const cN={x:cx[3]-nW/2,y:tm+(drawH-cH)/2,h:cH};
 
-  const hH=drawH*0.65, bH=drawH*0.6, cH=drawH*0.55;
-  const hNode={x:cx[1]-nW/2,y:tm+(drawH-hH)/2,h:hH};
-  const bNode={x:cx[2]-nW/2,y:tm+(drawH-bH)/2,h:bH};
-  const cNode={x:cx[3]-nW/2,y:tm+(drawH-cH)/2,h:cH};
-
-  const allVals=[...(M.p2h||[]).map(f=>f[1]),...(M.h2b||[]).map(f=>f[0]),...(M.h2d||[]).map(f=>f[1]),...(M.b2d||[]).map(f=>f[1]),...(M.bypass2b||[]).map(f=>f[0]),...(M.bypass2c||[]).map(f=>f[0]),...(M.c2d||[]).map(f=>f[1]),...(M.iraq||[]).map(f=>f[0])].filter(v=>v>0);
-  const maxV=Math.max(...allVals,1);
-  const scale=(Math.min(hH,bH)*0.7)/maxV;
+  const allV=[...(D.p2h||[]).map(f=>f[1]),...(D.h2b||[]).map(f=>f[0]),...(D.h2d||[]).map(f=>f[1]),...(D.b2d||[]).map(f=>f[1]),...(D.byb||[]).map(f=>f[0]),...(D.byc||[]).map(f=>f[0]),...(D.c2d||[]).map(f=>f[1]),...(D.iraq||[]).map(f=>f[0])].filter(v=>v>0);
+  const maxV=Math.max(...allV,1);
+  const sc=(Math.min(hH,bH)*0.68)/maxV;
 
   const offs={};
-  function getOff(k,sz){offs[k]=offs[k]||0;const v=offs[k];offs[k]+=sz+1.5;return v;}
+  function gOff(k,sz){offs[k]=offs[k]||0;const v=offs[k];offs[k]+=sz+2;return v}
 
   let P=[],N=[],L=[];
 
-  function flow(fx,fy,fh,tx,ty,th,val,type,label){
+  function flow(fx,fy,fh,tx,ty,th,val,type,tip){
     if(val<0.02)return;
     const col=FC[type]||"#888";
-    const thick=Math.max(2,val*scale);
-    const o0=getOff(`${Math.round(fx)},r`,thick);
-    const o1=getOff(`${Math.round(tx)},l`,thick);
-    const y0=Math.min(fy+o0+thick/2,fy+fh-thick/2);
-    const y1=Math.min(ty+o1+thick/2,ty+th-thick/2);
+    const tk=Math.max(2.5,val*sc);
+    const o0=gOff(`${Math.round(fx)},r`,tk);
+    const o1=gOff(`${Math.round(tx)},l`,tk);
+    const y0=Math.min(fy+o0+tk/2,fy+fh-tk/2);
+    const y1=Math.min(ty+o1+tk/2,ty+th-tk/2);
     const cp=(fx+nW+tx)/2;
-    const al=Math.min(0.82,0.35+Math.min(val/16,0.47));
-    const tip=label?`data-tip="${label} · ${val.toFixed(1)} mb/d"`:"";
-    P.push(`<path d="M${fx+nW},${y0.toFixed(1)} C${cp},${y0.toFixed(1)} ${cp},${y1.toFixed(1)} ${tx},${y1.toFixed(1)}" fill="none" stroke="${rgba(col,al)}" stroke-width="${thick.toFixed(1)}" ${tip} style="cursor:${label?'pointer':'default'}"/>`);
+    const al=Math.min(0.80,0.33+Math.min(val/18,0.47));
+    const da=tip?`data-tip="${tip} · ${val.toFixed(1)} mb/d"`:"";
+    P.push(`<path d="M${fx+nW},${y0.toFixed(1)} C${cp},${y0.toFixed(1)} ${cp},${y1.toFixed(1)} ${tx},${y1.toFixed(1)}" fill="none" stroke="${rgba(col,al)}" stroke-width="${tk.toFixed(1)}" ${da}/>`);
   }
 
-  function nodeRect(n,fill,blocked,lines,side){
-    N.push(`<rect x="${n.x}" y="${n.y.toFixed(1)}" width="${nW}" height="${n.h.toFixed(1)}" rx="4" fill="${fill}" opacity="${blocked?0.7:0.95}"/>`);
+  function nRect(n,fill,blocked,lines,side){
+    N.push(`<rect x="${n.x}" y="${n.y.toFixed(1)}" width="${nW}" height="${n.h.toFixed(1)}" rx="4" fill="${fill}" opacity="${blocked?.68:.95}"/>`);
     if(blocked){
-      const cx2=n.x+nW/2,cy2=n.y+n.h/2,s=Math.min(n.h*0.35,9);
-      N.push(`<line x1="${(cx2-s).toFixed(1)}" y1="${(cy2-s).toFixed(1)}" x2="${(cx2+s).toFixed(1)}" y2="${(cy2+s).toFixed(1)}" stroke="#FF4444" stroke-width="2.5"/>`);
-      N.push(`<line x1="${(cx2+s).toFixed(1)}" y1="${(cy2-s).toFixed(1)}" x2="${(cx2-s).toFixed(1)}" y2="${(cy2+s).toFixed(1)}" stroke="#FF4444" stroke-width="2.5"/>`);
+      const cx2=n.x+nW/2,cy2=n.y+n.h/2,s=Math.min(n.h*.32,10);
+      N.push(`<line x1="${(cx2-s).toFixed(1)}" y1="${(cy2-s).toFixed(1)}" x2="${(cx2+s).toFixed(1)}" y2="${(cy2+s).toFixed(1)}" stroke="#FF3333" stroke-width="2.5"/>`);
+      N.push(`<line x1="${(cx2+s).toFixed(1)}" y1="${(cy2-s).toFixed(1)}" x2="${(cx2-s).toFixed(1)}" y2="${(cy2+s).toFixed(1)}" stroke="#FF3333" stroke-width="2.5"/>`);
     }
-    const lx=side==="left"?n.x-6:n.x+nW+6;
-    const anch=side==="left"?"end":"start";
-    const fc=blocked?"#E24B4A":fill==="3C3489"?"#7F77DD":"var(--color-text-secondary)";
-    const lh=13,sy=n.y+n.h/2-(lines.length*lh)/2+lh*0.5;
-    lines.forEach((ln,i)=>{
-      L.push(`<text x="${lx}" y="${(sy+i*lh).toFixed(1)}" text-anchor="${anch}" dominant-baseline="central" font-size="11" fill="${fc}" font-weight="${i===0?'500':'400'}">${ln}</text>`);
-    });
+    const lx=side==="left"?n.x-7:n.x+nW+7;
+    const an=side==="left"?"end":"start";
+    const fc=blocked?"#E24B4A":"#444";
+    const lh=14,sy=n.y+n.h/2-(lines.length*lh)/2+lh*.55;
+    lines.forEach((ln,i)=>L.push(`<text x="${lx}" y="${(sy+i*lh).toFixed(1)}" text-anchor="${an}" dominant-baseline="central" font-size="11" fill="${fc}" font-weight="${i===0?600:400}">${ln}</text>`));
   }
 
-  // --- FLOWS ---
-  (M.p2h||[]).forEach(([pi,val,type])=>{
-    const lbl=M.producers[pi]+" → Hormuz · "+val.toFixed(1)+" mb/d";
-    flow(pNodes[pi].x,pNodes[pi].y,pNodes[pi].h,hNode.x,hNode.y,hNode.h,val,type,lbl);
-  });
-  (M.bypass2b||[]).forEach(([val,type,lbl])=>{
-    flow(pNodes[0].x,pNodes[0].y,pNodes[0].h,bNode.x,bNode.y,bNode.h,val,type,lbl);
-  });
-  (M.h2b||[]).forEach(([val,type,lbl])=>{
-    flow(hNode.x,hNode.y,hNode.h,bNode.x,bNode.y,bNode.h,val,type,lbl);
-  });
-  (M.h2d||[]).forEach(([di,val,type,lbl])=>{
-    flow(hNode.x,hNode.y,hNode.h,dNodes[di].x,dNodes[di].y,dNodes[di].h,val,type,lbl);
-  });
-  (M.b2d||[]).forEach(([di,val,type,lbl])=>{
-    flow(bNode.x,bNode.y,bNode.h,dNodes[di].x,dNodes[di].y,dNodes[di].h,val,type,lbl);
-  });
-  (M.bypass2c||[]).forEach(([val,type,lbl])=>{
-    flow(pNodes[0].x,pNodes[0].y,pNodes[0].h,cNode.x,cNode.y,cNode.h,val,type,lbl);
-  });
-  (M.c2d||[]).forEach(([di,val,type,lbl])=>{
-    flow(cNode.x,cNode.y,cNode.h,dNodes[di].x,dNodes[di].y,dNodes[di].h,val,type,lbl);
-  });
-  (M.iraq||[]).forEach(([val,type,lbl])=>{
-    flow(pNodes[1].x,pNodes[1].y,pNodes[1].h,dNodes[3].x,dNodes[3].y,dNodes[3].h,val,type,lbl);
-  });
+  // flows
+  (D.p2h||[]).forEach(([pi,val,type])=>flow(pN[pi].x,pN[pi].y,pN[pi].h,hN.x,hN.y,hN.h,val,type,D.prod[pi]+" → Hormuz"));
+  (D.byb||[]).forEach(([val,type,tip])=>flow(pN[0].x,pN[0].y,pN[0].h,bN.x,bN.y,bN.h,val,type,tip));
+  (D.h2b||[]).forEach(([val,type,tip])=>flow(hN.x,hN.y,hN.h,bN.x,bN.y,bN.h,val,type,tip));
+  (D.h2d||[]).forEach(([di,val,type,tip])=>flow(hN.x,hN.y,hN.h,dN[di].x,dN[di].y,dN[di].h,val,type,tip));
+  (D.b2d||[]).forEach(([di,val,type,tip])=>flow(bN.x,bN.y,bN.h,dN[di].x,dN[di].y,dN[di].h,val,type,tip));
+  (D.byc||[]).forEach(([val,type,tip])=>flow(pN[0].x,pN[0].y,pN[0].h,cN.x,cN.y,cN.h,val,type,tip));
+  (D.c2d||[]).forEach(([di,val,type,tip])=>flow(cN.x,cN.y,cN.h,dN[di].x,dN[di].y,dN[di].h,val,type,tip));
+  (D.iraq||[]).forEach(([val,type,tip])=>flow(pN[1].x,pN[1].y,pN[1].h,dN[3].x,dN[3].y,dN[3].h,val,type,tip));
 
-  // --- NODES ---
-  M.producers.forEach((name,i)=>{
-    const nd=pNodes[i];
+  // producer nodes
+  D.prod.forEach((name,i)=>{
+    const nd=pN[i];
     const isIran=name==="Iran"&&mi>0;
-    N.push(`<rect x="${nd.x}" y="${nd.y.toFixed(1)}" width="${nW}" height="${nd.h.toFixed(1)}" rx="4" fill="#085041" opacity="${isIran?0.2:0.95}"/>`);
-    L.push(`<text x="${nd.x-6}" y="${(nd.y+nd.h/2).toFixed(1)}" text-anchor="end" dominant-baseline="central" font-size="11" fill="${isIran?'#E24B4A':'var(--color-text-secondary)'}">${name}</text>`);
+    N.push(`<rect x="${nd.x}" y="${nd.y.toFixed(1)}" width="${nW}" height="${nd.h.toFixed(1)}" rx="4" fill="#085041" opacity="${isIran?.18:.95}"/>`);
+    L.push(`<text x="${nd.x-7}" y="${(nd.y+nd.h/2).toFixed(1)}" text-anchor="end" dominant-baseline="central" font-size="11" fill="${isIran?'#E24B4A':'#444'}" font-weight="400">${name}</text>`);
   });
 
-  nodeRect(hNode,M.c1fill,M.c1blocked,M.c1label,"right");
-  nodeRect(bNode,M.c2fill,M.c2blocked,M.c2label,"right");
-  if(M.hasC3) nodeRect(cNode,M.c3fill,false,M.c3label,"right");
+  nRect(hN,D.c1f,D.c1b,D.c1l,"right");
+  nRect(bN,D.c2f,D.c2b,D.c2l,"right");
+  if(D.hasC3) nRect(cN,D.c3f,false,D.c3l,"right");
 
-  M.dests.forEach((name,i)=>{
-    const nd=dNodes[i];
-    N.push(`<rect x="${nd.x}" y="${nd.y.toFixed(1)}" width="${nW}" height="${nd.h.toFixed(1)}" rx="4" fill="#0C447C" opacity="0.95"/>`);
-    L.push(`<text x="${nd.x+nW+6}" y="${(nd.y+nd.h/2).toFixed(1)}" text-anchor="start" dominant-baseline="central" font-size="11" fill="var(--color-text-secondary)">${name}</text>`);
+  D.dest.forEach((name,i)=>{
+    const nd=dN[i];
+    N.push(`<rect x="${nd.x}" y="${nd.y.toFixed(1)}" width="${nW}" height="${nd.h.toFixed(1)}" rx="4" fill="#0C447C" opacity=".95"/>`);
+    L.push(`<text x="${nd.x+nW+7}" y="${(nd.y+nd.h/2).toFixed(1)}" text-anchor="start" dominant-baseline="central" font-size="11" fill="#444" font-weight="400">${name}</text>`);
   });
 
-  // Column headers
-  const hdrCols=M.hasC3
+  // column headers
+  const hc=D.hasC3
     ?[[cx[0],"Producers"],[cx[1],"Hormuz"],[cx[2],"Bab el-Mandeb"],[cx[3],"Cape route"],[cx[4],"Destinations"]]
     :[[cx[0],"Producers"],[cx[1],"Hormuz"],[cx[2],"Bab el-Mandeb"],[cx[3],"Destinations"]];
-  const hdrs=hdrCols.map(([x,t])=>`<text x="${x}" y="${tm+2}" text-anchor="middle" font-size="10" font-weight="500" fill="var(--color-text-tertiary)">${t}</text>`).join('');
+  const hdrs=hc.map(([x,t])=>`<text x="${x}" y="${tm-4}" text-anchor="middle" font-size="10" font-weight="600" fill="#bbb" letter-spacing="0.5">${t.toUpperCase()}</text>`).join('');
 
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg">${hdrs}${P.join('')}${N.join('')}${L.join('')}</svg>`;
+  return`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg">${hdrs}${P.join('')}${N.join('')}${L.join('')}</svg>`;
 }
 
 function show(mi){
   ["b0","b1","b2"].forEach((id,i)=>{
     const el=document.getElementById(id);
-    if(i===mi){
-      el.style.background=BTN_COLORS[mi];
-      el.style.borderColor=BTN_COLORS[mi];
-      el.style.color="#fff";
-    } else {
-      el.style.background="var(--color-background-secondary)";
-      el.style.borderColor="var(--color-border-secondary)";
-      el.style.color="var(--color-text-secondary)";
-    }
+    if(i===mi){el.style.cssText=`font-size:12px;font-weight:500;padding:7px 16px;border-radius:20px;border:none;background:${BC[mi]};color:#fff;cursor:pointer`}
+    else{el.style.cssText="font-size:12px;font-weight:500;padding:7px 16px;border-radius:20px;border:1.5px solid #ccc;background:#f5f5f5;color:#555;cursor:pointer"}
   });
-  document.getElementById("status").textContent=STATUS[mi];
-  document.getElementById("status").style.color=BTN_COLORS[mi];
+  document.getElementById("card-sub").textContent=SUBS[mi];
+  document.getElementById("card-sub").style.color=BC[mi];
   document.getElementById("svgwrap").innerHTML=buildSVG(mi);
+  document.getElementById("hoverbar").className="";
 
   document.querySelectorAll("#svgwrap path[data-tip]").forEach(p=>{
+    p.style.cursor="pointer";
     p.addEventListener("mouseenter",function(){
-      document.getElementById("tip").textContent=this.dataset.tip;
-      document.getElementById("tip").style.display="block";
+      const bar=document.getElementById("hoverbar");
+      bar.textContent=this.dataset.tip;
+      bar.className="vis";
     });
-    p.addEventListener("mouseleave",function(){
-      document.getElementById("tip").style.display="none";
+    p.addEventListener("mouseleave",()=>{
+      document.getElementById("hoverbar").className="";
     });
   });
 }
